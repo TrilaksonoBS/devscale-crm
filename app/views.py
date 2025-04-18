@@ -62,7 +62,6 @@ class DashboardView(LoginRequiredMixinView, TemplateView):
             follow_up_date__lte=timezone.make_aware(
                 datetime.combine(next_week, datetime.max.time())
             ),
-            reminder_set=False,
         ).count()
 
         # follow-up list
@@ -74,7 +73,6 @@ class DashboardView(LoginRequiredMixinView, TemplateView):
                 follow_up_date__lte=timezone.make_aware(
                     datetime.combine(next_week, datetime.max.time())
                 ),
-                reminder_set=False,
             )
             .select_related("customer")
             .order_by("follow_up_date")
