@@ -1,0 +1,124 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="{% static 'output.css' %}" rel="stylesheet" />
+    <title>{% block title %}DEVSCALE CRM{% endblock %}</title>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    {% block extra %}{% endblock %}
+    </head>
+    <body
+        class="bg-gray-50 min-h-screen flex flex-col">
+        {% if user.is_authenticated %}
+        <!-- Header navigation -->
+        <header class="bg-blue-600 shadow-md">
+            <nav class="container mx-auto px-4 py-3">
+                <div class="flex justify-between items-center">
+                    <!-- Logo/Brand -->
+                    <div class="flex items-center">
+                        <a
+                            href="{% url 'dashboard' %}"
+                            class="text-white font-bold text-xl flex items-center">
+                            <i
+                                class="ph-duotone ph-users-three text-2xl mr-2"></i>
+                            DEVSCALE CRM
+                        </a>
+                    </div>
+
+                    <!-- Desktop Navigation -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <a
+                            href="{% url 'dashboard' %}"
+                            class="text-white hover:text-gray-200 px-3 py-2 rounded-md">
+                            Dashboard
+                        </a>
+                        <a
+                            href="{% url 'customer-list' %}"
+                            class="text-white hover:text-gray-200 px-3 py-2 rounded-md">
+                            Customers
+                        </a>
+                        <a
+                            href="{% url 'interaction-list' %}"
+                            class="text-white hover:text-gray-200 px-3 py-2 rounded-md">
+                            Interactions
+                        </a>
+                        <div class="relative" x-data="{ open: false }">
+                            <button
+                                @click="open = !open"
+                                class="flex items-center text-white hover:text-gray-200 px-3 py-2 rounded-md">
+                                <span>{{ request.user.username }}</span>
+                                <i class="ph-bold ph-caret-down ml-1"></i>
+                            </button>
+                            <div
+                                x-show="open"
+                                @click.away="open = false"
+                                class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                                <a
+                                    href="{% url 'admin:index' %}"
+                                    class="block px-4 py-2 text-gray-700 hover:bg-primary-600 hover:bg-blue-200">
+                                    Admin
+                                </a>
+                                <form method="post" action="{% url 'logout' %}" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                           class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-primary-600 hover:bg-blue-200">
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </nav>
+        </header>
+        {% endif %}
+
+        <!-- Main content -->
+        <main class="flex-grow container mx-auto px-4 py-6">
+            {% if messages %}
+            <div class="mb-6">
+                {% for message in messages %}
+                <div
+                    class="p-4 mb-2 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                    <div class="flex items-center">
+                        {% if message.tags == 'success' %}
+                        <i class="ph-duotone ph-check-circle mr-2"></i>
+                        {% elif message.tags == 'error' %}
+                        <i class="ph-duotone ph-x-circle mr-2"></i>
+                        {% elif message.tags == 'warning' %}
+                        <i class="ph-duotone ph-warning-circle mr-2"></i>
+                        {% else %}
+                        <i class="ph-duotone ph-info mr-2"></i>
+                        {% endif %}
+                        <span>{{ message }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-100 border-t border-gray-200">
+            <div class="container mx-auto px-4 py-4">
+                <div
+                    class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="text-gray-600 mb-2 md:mb-0">
+                        &copy; {% now "Y" %} DEVSCALE CRM - A Django CRM Project
+                    </div>
+                    <div class="text-gray-600 text-sm">
+                        Made by Bian | DEVSCALE
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        {% block scripts %}{% endblock %}
+    </body>
+</html>

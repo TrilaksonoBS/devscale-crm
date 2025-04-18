@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %} DEVSCALE CRM - Dashboard {% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900"> Dashboard </h1>
+            <p class="mt-1 text-gray-600"> Welcome back, {{ request.user.username }}! </p>
+        </div>
+        <div class="mt-4 md:mt-0 flex gap-2">
+            <a href="{% url 'customer-create' %}" class="btn btn-primary">
+                <i class="ph-bold ph-user-plus mr-1"></i>
+                Add Customers
+            </a>
+            <a href="{% url 'interaction-create' %}" class="btn btn-outline">
+                <i class="ph-bold ph-chat-circle-plus mr-1"></i>
+                Add Interactions
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        
+        <div class="bg-white shadow stats rounded-lg p-6">
+            <div class="stat">
+                <div class="text-sm font-medium text-gray-500">Total Customers</div>
+                <div class="mt-1 text-3xl font-semibold text-blue-400">{{ total_customers }}</div>
+                <div class="stat-desc">
+                    <a href="{% url 'customer-list' %}" class="link link-primary text-sm">View all</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow stats rounded-lg p-6">
+            <div class="stat">
+                <div class="text-sm font-medium text-gray-500">Active Customers</div>
+                <div class="mt-1 text-3xl font-semibold text-blue-400">{{ active_customers }}</div>
+                <div class="stat-desc">
+                    <a href="{% url 'customer-list' %}" class="link link-primary text-sm">View Active</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="stat">
+                <div class="text-sm font-medium text-gray-500">Recent Interactions</div>
+                <div class="mt-1 text-3xl font-semibold text-blue-400">{{ recent_interactions | length }}</div>
+                <div class="mt-2 text-sm text-gray-500">Past 7 days</div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow stats rounded-lg p-6">
+            <div class="stat">
+                <div class="text-sm font-medium text-gray-500">Upcoming Follow Ups</div>
+                <div class="mt-1 text-3xl font-semibold text-blue-400">{{ upcoming_followups }}</div>
+                <div class="mt-2 stat-desc">
+                    Next 7 days
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity and Tasks Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Activity -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Recent Interactions</h2>
+
+            {% if recent_interactions_list %}
+            <div class="space-y-4">
+                {% for interaction in recent_interactions_list %}
+                <div class="p-4 border rounded-md hover:bg-gray-50">
+                    <div class="flex justify-between mb-2">
+                        <span class="font-medium">
+                            <a href="{% url 'customer-detail' interaction.customer.id %}" class="text-blue-600 hover:text-blue-700">
+                                {{ interaction.customer.name }}
+                            </a>
+                        </span>
+                        <span class="text-sm text-gray-500">{{ interaction.interaction_date|date:"M d, g:i A" }}</span>
+                    </div>
+                    <div class="flex items-center mb-2">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full {% if interaction.interaction_type == 'call' %}bg-orange-100 text-orange-800{% elif interaction.interaction_type == 'email' %}bg-blue-100 text-blue-800{% elif interaction.interaction_type == 'meeting' %}bg-blue-100 text-blue-800{% else %}bg-indigo-100 text-indigo-800{% endif %}">
+                            {{ interaction.get_interaction_type_display }}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">
+                        {{ interaction.summary|truncatechars:100 }}
+                    </p>
+                    <div class="text-right">
+                        <a href="{% url 'interaction-detail' interaction.id %}" class="text-sm text-blue-600 hover:text-blue-700">
+                            View details
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="mt-4 text-center">
+                <a href="{% url 'interaction-list' %}" class="text-sm text-blue-600 hover:text-blue-700">
+                    View all interactions
+                </a>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <i class="ph-duotone ph-chat-centered-text text-4xl text-gray-300 mb-2"></i>
+                <p class="text-gray-500">No recent interactions found</p>
+                <div class="mt-4">
+                    <a href="{% url 'interaction-create' %}" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Add an interaction
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    <!-- Upcoming Follow-ups -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Upcoming Follow-ups</h2>
+
+            {% if upcoming_followups_list %}
+            <div class="space-y-4">
+                {% for followup in upcoming_followups_list %}
+                <div class="p-4 border rounded-md hover:bg-gray-50">
+                    <div class="flex justify-between mb-2">
+                        <span class="font-medium">
+                            <a href="{% url 'customer-detail' followup.customer.id %}" class="text-blue-600 hover:text-blue-700">
+                                {{ followup.customer.name }}
+                            </a>
+                        </span>
+                        <span class="text-sm {% if followup.days_until_follow_up == 0 %}text-red-600{% elif followup.days_until_follow_up <= 1 %}text-yellow-600{% else %}text-blue-600{% endif %}">
+                            {% if followup.days_until_follow_up == 0 %} Today!
+                            {% elif followup.days_until_follow_up == 1 %} Tomorrow
+                            {% else %} In {{ followup.days_until_follow_up }} days
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="flex items-center mb-2">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full {% if followup.interaction_type == 'call' %}bg-orange-100 text-orange-800{% elif followup.interaction_type == 'email' %}bg-blue-100 text-blue-800{% elif followup.interaction_type == 'meeting' %}bg-blue-100 text-blue-800{% else %}bg-indigo-100 text-indigo-800{% endif %}">
+                            {{ followup.get_interaction_type_display }}
+                        </span>
+                        <span class="text-sm text-gray-500 ml-2">
+                            {{ followup.follow_up_date|date:"M d, g:i A" }}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">
+                        {{ followup.summary|truncatechars:100 }}
+                    </p>
+                    <div class="text-right">
+                        <a href="{% url 'interaction-detail' followup.id %}" class="text-sm text-blue-600 hover:text-blue-700">
+                            View details
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="mt-4 text-center">
+                <a href="{% url 'interaction-list' %}" class="text-sm text-blue-600 hover:text-blue-700">
+                    View all follow-ups
+                </a>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <i class="ph-duotone ph-calendar-check text-4xl text-gray-300 mb-2"></i>
+                <p class="text-gray-500">No upcoming follow-ups scheduled</p>
+                <div class="mt-4">
+                    <a href="{% url 'interaction-create' %}" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Schedule a follow-up
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

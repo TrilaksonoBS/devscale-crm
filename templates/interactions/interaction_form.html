@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | Dev CRM{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow rounded-lg p-6 max-w-3xl mx-auto space-y-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">{{ title }}</h1>
+        <p class="mt-1 text-gray-600">
+            Record details about an interaction with 
+            {% if customer %}
+                <a href="{% url 'customer-detail' customer.id %}" class="link link-primary">{{ customer.name }}</a>
+            {% else %}
+                a customer
+            {% endif %}
+        </p>
+    </div>
+    
+    <form method="post" class="space-y-8">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Customer Field -->
+            <div class="form-control">
+                <label for="{{ form.customer.id_for_label }}" class="label">
+                    <span class="label-text">Customer*</span>
+                </label>
+                {% if customer %}
+                    <input 
+                        type="text" 
+                        value="{{ customer.name }}"
+                        class="input input-bordered w-full"
+                        disabled
+                    />
+                    <input type="hidden" name="{{ form.customer.name }}" value="{{ customer.id }}" />
+                {% else %}
+                    <select 
+                        name="{{ form.customer.name }}" 
+                        id="{{ form.customer.id_for_label }}" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {% if form.customer.errors %}select-error{% endif %}"
+                        required
+                    >
+                        <option value="">Select a customer</option>
+                        {% for choice in form.customer.field.choices %}
+                            {% if choice.0 != '' %}
+                                <option value="{{ choice.0 }}" {% if form.customer.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                {% endif %}
+                {% if form.customer.errors %}
+                    <div class="label">
+                        <span class="label-text-alt text-error">{{ form.customer.errors.0 }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Interaction Type Field -->
+            <div class="form-control">
+                <label for="{{ form.interaction_type.id_for_label }}" class="label">
+                    <span class="label-text">Interaction Type*</span>
+                </label>
+                <select 
+                    name="{{ form.interaction_type.name }}" 
+                    id="{{ form.interaction_type.id_for_label }}" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {% if form.interaction_type.errors %}select-error{% endif %}"
+                    required
+                >
+                    <option value="">Select interaction type</option>
+                    {% for value, label in form.interaction_type.field.choices %}
+                        <option value="{{ value }}" {% if form.interaction_type.value == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.interaction_type.errors %}
+                    <div class="label">
+                        <span class="label-text-alt text-error">{{ form.interaction_type.errors.0 }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Interaction Date Field -->
+            <div class="form-control">
+                <label for="{{ form.interaction_date.id_for_label }}" class="label">
+                    <span class="label-text">Interaction Date & Time*</span>
+                </label>
+                <input 
+                    type="datetime-local" 
+                    name="{{ form.interaction_date.name }}" 
+                    id="{{ form.interaction_date.id_for_label }}" 
+                    value="{{ form.interaction_date.value|date:'Y-m-d\TH:i' }}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {% if form.interaction_date.errors %}input-error{% endif %}" 
+                    placeholder="dd/mm/yyyy, --:--"
+                    required
+                />
+                {% if form.interaction_date.errors %}
+                    <div class="label">
+                        <span class="label-text-alt text-error">{{ form.interaction_date.errors.0 }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Follow-up Date Field -->
+            <div class="form-control">
+                <label for="{{ form.follow_up_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    <span class="label-text">Follow-up Date & Time</span>
+                </label>
+                <input 
+                    type="datetime-local" 
+                    name="{{ form.follow_up_date.name }}" 
+                    id="{{ form.follow_up_date.id_for_label }}" 
+                    value="{% if form.follow_up_date.value %}{{ form.follow_up_date.value|date:'Y-m-d\TH:i' }}{% endif %}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {% if form.follow_up_date.errors %}input-error{% endif %}" 
+                    placeholder="dd/mm/yyyy, --:--"
+                />
+                {% if form.follow_up_date.errors %}
+                    <div class="label">
+                        <span class="label-text-alt text-error">{{ form.follow_up_date.errors.0 }}</span>
+                    </div>
+                {% endif %}
+                <div class="label">
+                    <span class="label-text-alt text-gray-400">If set, a reminder will be scheduled automatically</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2 form-control">
+                <label for="{{ form.summary.id_for_label }}" class="label">
+                    <span class="label-text">Summary*</span>
+                </label>
+                <textarea
+                    name="{{ form.summary.name }}"
+                    id="{{ form.summary.id_for_label }}"
+                    placeholder="Describe the interaction in detail"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-32 {% if form.summary.errors %}textarea-error{% endif %}"
+                    required>{{ form.summary.value|default:'' }}</textarea>
+                {% if form.summary.errors %}
+                    <div class="label">
+                        <span class="label-text-alt text-error">{{ form.summary.errors.0 }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="flex justify-end space-x-4 mt-8">
+            {% if customer %}
+                <a href="{% url 'customer-detail' customer.id %}" class="btn btn-outline">
+                    Cancel
+                </a>
+            {% else %}
+                <a href="{% url 'interaction-list' %}" class="btn btn-outline">
+                    Cancel
+                </a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">
+                {{ button_text|default:'Save Interaction' }}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
